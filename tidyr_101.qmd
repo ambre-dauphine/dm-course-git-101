@@ -12,6 +12,8 @@ library(here)
 ```{r}
 #| message: false
 library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
 
@@ -27,3 +29,45 @@ ggplot(EuStockMarkets, aes(y=DAX,x=time(EuStockMarkets)))+
 ```
 
 I applied the time function to the data frame -> the data is a collection of number but it is a data frame of time series 
+```{r}
+EuStockMarkets <-   
+  EuStockMarkets|> 
+  as_tibble()|> #could be as.data.frame 
+  mutate(date=as.numeric(time(EuStockMarkets)))
+```
+
+```{r}
+ggplot(EuStockMarkets, aes(y=DAX,x=date))+
+  geom_line()
+```
+
+```{r}
+ggplot(EuStockMarkets, aes(y=CAC,x=date))+
+  geom_line()
+```
+## Two indexes on the same graphical representation ?
+
+### Poor man's solution 
+
+```{r}
+ggplot(EuStockMarkets, aes(y=CAC,x=date))+
+  geom_line(colour='steelblue')+
+  geom_line(mapping=aes(y=DAX),color='salmon') #by default the map is the same as the previous 
+```
+### Tidyr solution 
+
+```{r}
+EuStockMarkets|>
+  pivot_longer(!date, names_to="index")|> #is the indexing variable #names_to for name and #values_to for value 
+  slice_head(n=10)|>
+  knitr::kable()
+```
+
+```{r}
+EuStockMarkets|>
+  pivot_longer(!date, names_to="index")|>
+  ggplot(aes(x=date, y=value, colour=index))+
+  geom_line()
+  
+```
+
