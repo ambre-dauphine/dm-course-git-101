@@ -68,6 +68,88 @@ EuStockMarkets|>
   pivot_longer(!date, names_to="index")|>
   ggplot(aes(x=date, y=value, colour=index))+
   geom_line()
+```
+
+
+
+```{r}
+EuStockMarkets|>
+  pivot_longer(everything())|>
+  slice_head(n=10)|>
+  knitr::kable()
+```
+
+```{r}
+EuStockMarkets|>
+  pivot_longer(DAX | SMI)|>
+  slice_head(n=10)|>
+  knitr::kable()
+```
+make sense if you can interpret the thing put in line as an index/key for identification 
+once pivot everything, cannot come back to original data 
+
+when you can select multiple variables you can put and. 
+when you can specify only one collection of variables so you need to put or. 
+
+also used to compute statistics on lines 
+
+### Working on rows with pivoting 
+
+```{r}
+EuStockMarkets|>
+  select(!FTSE)|>
+  pivot_longer(!date)|>
+  summarize(avg_stock=mean(value),
+            .by = date)|>
+  slice_head(n=10)|>
+  knitr::kable()
   
 ```
 
+### Alternative with `rowwise` (broken) 
+```{r}
+EuStockMarkets|>
+  select(!FTSE)|>
+  rowwise()|>
+  summarise(date,avg_stock=mean(c(DAX,SMI,CAC)))
+```
+
+rowwise say to R that the calculation is going to operate on line and not in column 
+say which variable I want to keep (date) 
+then you say you want to apply on each of the row, compute what is in the row 
+
+## Reverse operation: pivot to a wider format 
+```{r}
+EuLong <- EuStockMarkets|>
+  pivot_longer(!date)
+```
+
+```{r}
+EuLong|>
+  pivot_wider(id_cols=date)
+```
+
+id_cols enable to specify column use to recover original structure 
+name and value are recognized so all the other columns are considered as identifier 
+
+```{r}
+data("diamonds")
+dgroup <- diamonds|>
+  summarise(count=n(), median_price=median(price),.by=c(cut,color))
+```
+
+```{r}
+dgroup|>
+  pivot_wider(id_cols=cut,names_from=color, values_from=median_price)
+```
+identifyer = cut
+pretend it's an previous pivot longer -> tell to R that names_fromes is where he is going to find de name of the values, et que les values sont les median
+can have multiple names_from 
+
+```{r}
+dgroup|>
+  slice_sample(n=25)|>
+  pivot_wider(id_cols=cut,names_from=color, values_from=count)
+```
+
+=> you may have long format because many NA 
